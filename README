@@ -1,0 +1,9 @@
+STIELTJES
+=========
+
+Required software
+-----------------
+
+NumPy
+SciPy
+mpmath
