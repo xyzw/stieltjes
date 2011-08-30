@@ -4,7 +4,7 @@ STIELTJES
 Required software
 -----------------
 
+Python 2.6+
 NumPy
 SciPy
 mpmath
-...
