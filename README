@@ -1,6 +1,9 @@
 STIELTJES
 =========
 
+A multi-precision library for generating orthogonal polynomials and corresponding quadrature rules.
+
+
 Required software
 -----------------
 
