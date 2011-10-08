@@ -15,14 +15,14 @@ def r_jacobi(N, a=0, b=0):
     nu = matrix([nu])
     mu = matrix([mu])
     e = ones(1,N)
-    nab = 2*n+(a+b)
+    nab = mpf(2)*n+(a+b)
     d = mult(nab,nab+2)
-    A = row_join(nu, div((b**2-a**2)*e,d))
+    A = row_join(nu, div((b*b-a*a)*e,d))
 
     n = n[1:N]
     nab = nab[1:N]
-
-    B1=matrix([4*(a+1)*(b+1)/((a+b+2)**2*(a+b+3))])
-    B=4*div(mult(mult(n+a,n+b),mult(n,n+a+b)), mult(mult(mult(nab,nab),nab+1), nab-1))
+    
+    B1=matrix([mpf(4)*(a+1)*(b+1)/((a+b+2)*(a+b+2)*(a+b+3))])
+    B=mpf(4)*div(mult(mult(n+a,n+b),mult(n,n+a+b)), mult(mult(mult(nab,nab),nab+1), nab-1))
     ab=row_join(A.T, col_join(col_join(mu, B1),B.T));
     return ab

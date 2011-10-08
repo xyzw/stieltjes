@@ -3,11 +3,11 @@ from matrix_utils import *
 #
 # bisection
 # 
-# This is the Python port of the ALGOL program described in
+# This is a Python port of the ALGOL program described in
 # Barth et al., Calculation of the Eigenvalues of a Symmetric Tridiagonal Matrix by the Method of Bisection.
 #
 # SYNOPSIS
-# Calculates certain eigenvalues, and optionally the eigenvectors of a symmetric tridiagonal matrix.
+# Calculates certain eigenvalues of a symmetric tridiagonal matrix.
 #
 # IN
 # a, b: Diagonal and subdiagonal, respectively.
@@ -25,7 +25,7 @@ def bisection(a, b, epsilon, m1, m2):
         raise ValueError, "Diagonal and subdiagonal vector dimension mismatch"
 
     if (m1 > m2) or (m1 < 0) or (m2 < 0) or (m1 >= n) or (m2 >= n):
-        raise ValueError, "Eigenvalue indices must be ordered, nonnegative and lesser that matrix order"
+        raise ValueError, "Eigenvalue indices must be ordered, nonnegative and lesser than matrix order"
     
     z = 0
     

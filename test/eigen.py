@@ -27,14 +27,13 @@ def tridi101(dpsv, nv, epsv):
                                                                       z, \
                                                                       (t2-t1))
 
-
 print ">> Eigenproblem"
 
 print ">>>> bisection"
 
-dpsv = [10, 15, 20]
-nv = [5, 10, 20]
-epsv = [mpf(1e-10), mpf(1e-25), mpf(1e-20)]
+dpsv = [20]
+nv = [10]
+epsv = [mpf(1e-20)]
 
 tridi101(dpsv, nv, epsv)
 
