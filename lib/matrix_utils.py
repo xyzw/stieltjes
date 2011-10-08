@@ -44,6 +44,14 @@ def div(A,B):
             C[i,j] = A[i,j]/B[i,j]
     return C
 
+def pwr(A,e):    
+    C = matrix(A.rows, A.cols)
+    for i in range(A.rows): 
+        for j in range(A.cols):
+            C[i,j] = power(A[i,j],e)
+    return C
+
+
 def tridiag(a,b,c):
     if a.rows != b.rows+1 or b.rows != c.rows or a.rows != c.rows+1:
         raise ValueError, "Input vectors dimension mismatch"

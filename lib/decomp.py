@@ -29,7 +29,7 @@ def tql2(d,e,ev=False,maxit=50):
     
     n = d.rows
     e = col_join(e,zeros(1))
-    V = zeros(n)
+    if ev: V = eye(n)
 
     f = mpf(0)
     tst1 = mpf(0)
@@ -86,12 +86,13 @@ def tql2(d,e,ev=False,maxit=50):
                     c = p / r
                     p = c * d[i] - s * g
                     d[i+1] = h + s * (c * g + s * d[i])
-   
-                    # Accumulate transformation.
-                    for k in range(n):
-                        h = V[k,i+1]
-                        V[k,i+1] = s * V[k,i] + c * h
-                        V[k,i] = c * V[k,i] - s * h
+
+                    if ev:
+                        # Accumulate transformation.
+                        for k in range(n):
+                            h = V[k,i+1]
+                            V[k,i+1] = s * V[k,i] + c * h
+                            V[k,i] = c * V[k,i] - s * h
                         
                 p = -s * s2 * c3 * el1 * e[l] / dl1
                 e[l] = s * p
@@ -115,12 +116,13 @@ def tql2(d,e,ev=False,maxit=50):
         if k != i:
             d[k] = d[i];
             d[i] = p;
-            for j in range(n):
-                p = V[j,i];
-                V[j,i] = V[j,k];
-                V[j,k] = p;
+            if ev:
+                for j in range(n):
+                    p = V[j,i];
+                    V[j,i] = V[j,k];
+                    V[j,k] = p;
 
-    return V
+    if ev: return V
 
 #
 # SVD
