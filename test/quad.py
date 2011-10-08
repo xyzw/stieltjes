@@ -5,6 +5,7 @@ from decomp import *
 from gauss import *
 from sti import *
 from itertools import product
+from poly import *
 
 import time
 
@@ -46,12 +47,23 @@ epsv = [mpf(1e-5), mpf(1e-15), mpf(1e-50)]
 
 #testjac(dpsv,nv,av,bv,epsv)
 
-n=10
-ab = r_jacobi(n,1,1)
-xw = gauss(ab)
+n=5
+ab = r_jacobi(n,0,0)
+p = ab_to_poly(ab)
 
-XW = row_join( row_join(xw[:,0],xw[:,0]), row_join(xw[:,1],xw[:,1]) )
-B = pdstis1(XW,[n, n],1)
-print B
+
+from pylab import *
+xx = arange(-1.0, 1.0, 0.01)
+for i in range(n):
+    plot(xx,polyvalv(p[i,:],xx))
+axis([-1,1,-0.5,0.5])
+grid(True)
+show()
+
+#xw = gauss(ab)
+
+#XW = row_join( row_join(xw[:,0],xw[:,0]), row_join(xw[:,1],xw[:,1]) )
+#B = pdstis1(XW,[n, n],1)
+#print B
 
 
