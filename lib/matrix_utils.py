@@ -92,6 +92,6 @@ def hypot(a,b):
         r = mpf(0)
     return r
 
-
 def samesign(a,b):
     return fabs(a) if b >= mpf(0) else -fabs(a)
+
