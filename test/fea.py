@@ -19,7 +19,7 @@ xw = gauss(ab)
 
 els = equidistant(-1,1,3)
 print els
-fea_diri2(els, 2, kappa, matrix([-1,0,1]), xw)
+#fea_diri2(els, 2, kappa, matrix([-1,0,1]), xw)
 
 print ab_to_poly(ab)
 
@@ -44,10 +44,11 @@ ps = Slider(pl.axes([0.1, 0.1, 0.7, 0.03]), 'n', 2, 15, valinit=2, valfmt='%1.0f
 def update(val):
     ax.clear()
     p = int(ps.val)
-    L = lobatto(p)
+    X = chebyx(p)
+    L = lagrange(X)
     xx = pl.linspace(-1, 1, 100)
-    ax.plot(pl.linspace(-1,1,p),pl.zeros(p),'o')
-    ax.plot(pl.linspace(-1,1,p),pl.ones(p),'o')
+    ax.plot(X,pl.zeros(p),'o')
+    ax.plot(X,pl.ones(p),'o')
     for i in range(p):
         ax.plot(xx,polyvalv(L[i,:],xx))
     pl.draw()

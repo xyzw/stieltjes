@@ -62,21 +62,30 @@ def polyaff(p, a, b, c, d):
         q = q + row_join(zeros(1,k-1), p[k-1]*r);
     return q
 
-# Compute n Lagrange basis polynomials on [-1,1] with equidistant nodes
-def lagrange(n):
+# Chebyshev nodes on [-1,1]
+def cheby(n):
+    l = lambda k: cos(pi*mpf(2*k-1)/mpf(2*n))
+    return matrix([map(l, range(n,0,-1))])
+
+# Extended Chebyshev nodes on [-1,1]
+def chebyx(n):
+    l = lambda k: cos(pi*mpf(2*k-1)/mpf(2*n)) / cos(pi/mpf(2*n))
+    return matrix([map(l, range(n,0,-1))]) # reversed
+
+# Compute Lagrange basis polynomials on nodes X
+def lagrange(X):
+    n = len(X)
     if n < 1:
         raise ValueError, "Invalid nodes"
 
-    x = linspace(-1,1,n)
     L = zeros(n,n)
-
     for j in range(n):
         Lj = [mpf(1)]
-        denom = 1
+        denom = mpf(1)
         for k in range(n):
             if k != j:
-                Lj = conv(Lj, [mpf(1), x[k]])
-                denom *= x[k]-x[j]
+                Lj = conv(Lj, [mpf(1), X[k]])
+                denom *= X[k]-X[j]
         L[j,:] = Lj/denom
 
     return L
