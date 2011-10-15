@@ -26,7 +26,7 @@ def equidistant(a,b,n):
 #
 #
 # INPUT
-# el    - Intervals (pairs) partitioning some interval.
+# X     - Nodes.
 # p     - Element degrees.
 # kappa - Constant coefficient.
 # f     - Input function.
@@ -35,7 +35,9 @@ def equidistant(a,b,n):
 # RETURNS
 # Solution written in element bases. 
 #
-def fea_diri2(els, p, kappa, f, xw):
+def fea_diri2(X, p, kappa, f, xw):
+    n = len(X)
+    els = zip(X[0:n-1], X[1:n])
 
     # store element lengths
     hs = map(lambda el : el[1]-el[0], els)
@@ -43,7 +45,8 @@ def fea_diri2(els, p, kappa, f, xw):
     # reference element nodes
     xi = linspace(-1,1,p+1)
     # compute Lagrange shape functions and derivatives
-    phi = lagrange(p+1)
+    Xc = chebyx(p+1)
+    phi = lagrange(Xc)
     phid = matrix([polyder(phi[i,:].tolist()[0]) for i in range(0,p+1)])
 
     # determine local matrices
@@ -58,42 +61,87 @@ def fea_diri2(els, p, kappa, f, xw):
     print loc0
     print loc1
 
-    dof = (len(els)+1)*(p+1)
-    print "dof = ", dof, "nel =", len(els)
+    nel = len(X)-1
 
-    nel = len(els)
+    # Generate Local-to-Global index map
+    G = []
+    i = 0
+    io = nel-1
 
-    ind = map(lambda i : range(i*(p+1),(i+1)*(p+1)), range(nel))
+    G = [[i] for i in range(io)]
+    G.append([-1])
+    for k in range(nel):
+        G[k].extend(range(io+k*(p-1),io+(k+1)*(p-1)))
+        G[k].append(k-1)
+    
+    dof = nel-2 + nel*(p-1)
 
-    print ind
+    print els
+    print G
 
-    A = zeros(dof)
-    b = zeros(dof,1)
+    A = zeros(dof+1)
+    b = zeros(dof+1,1)
 
     # Assembly
     e = 0
     for el in els:
-        Jaff = mpf(p)/hs[e]
+        Jaff = mpf(2)/hs[e]
         loc = Jaff*(kappa*loc0) + (1/Jaff)*loc1
 
-        ia = ind[e][0]
-        ib = ind[e][p]+1
-        print ia,ib
-        A[ia:ib,ia:ib] += loc
+        for i in range(p+1):
+            for j in range(p+1):
+                if G[e][i] != -1 and G[e][j] != -1:
+                    A[G[e][i],G[e][j]] += loc[i,j]
+                else:
+                    if j == 0:
+                        b[G[e][i]] -= loc0[0,1]*polyval(f, el[0])
+                    else:
+                        b[G[e][i]] -= loc0[1,0]*polyval(f, el[1])
 
-        # Deduce right hand functional
-        for nu in range(p+1):
-            ft = polyaff(f, -1, 1, el[0], el[1])
-            b[e+nu] += Jaff*quadpq(ft,phi[nu,:],xw)
+            if G[e][i] != -1:
+                ft = polyaff(f, -1, 1, el[0], el[1])
+                b[G[e][i]] += Jaff*quadpq(ft,phi[i,:],xw)
 
         # Dirichlet boundary conditions
-        if e == 0:
-            b[e+1] -= loc0[0,1]*polyval(f, el[0])
-        if e+1 == len(els):
-            b[e+0] -= loc0[1,0]*polyval(f, el[1])
+       # if e == 0:
+        #    b[e+1] -= loc0[0,1]*polyval(f, el[0])
+       # if e+1 == len(els):
+        #    b[e+0] -= loc0[1,0]*polyval(f, el[1])
 
         e += 1
 
-    print A,b
+    print ">>>> A"
+    print A
+    print ">>>> b"
+    print b
+
+    x = lu_solve(A,b)
+
+    #x = col_join(col_join(zeros(1), x),zeros(1))
     
-    return
+    print ">>>> x"
+    print x
+    
+    return els,G,x,phi
+
+# Evaluate finite element solution x
+def evalfea1sol(els,G,x,phi,elres):
+    xx = []
+    yy = []
+    e = 0
+    print phi
+    for el in els:
+        xxx = linspace(el[0],el[1],elres)
+        yyy = zeros(1,elres)
+        print "===", el[0],el[1]
+        #yyy += polyvalv(polyaff(phi[0,:],el[0],el[1],-1,1),xxx)
+        for p in range(phi.rows):
+            i = G[e][p]
+            if i != -1:
+                print p, i, x[i]
+                yyy += x[i]*polyvalv(polyaff(phi[p,:],el[0],el[1],-1,1),xxx)
+
+        xx.extend(xxx)
+        yy.extend(yyy)
+        e += 1
+    return xx,yy

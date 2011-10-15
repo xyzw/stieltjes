@@ -1,0 +1,49 @@
+
+from poly import polyaxpy
+
+#TODO: Improve this
+
+class ppoly(object):
+    def __init__(self, I, P=[]):
+        self._poly = P if len(P)>0 else [[0] for i in range(len(I))]
+        self._intv = I
+
+    @property
+    def poly(self):
+        return self._poly
+
+    @poly.setter
+    def poly(self, p):
+        self._poly = p
+
+    @property
+    def intv(self):
+        return self._intv
+
+    @intv.setter
+    def intv(self,i):
+        self._intv = i
+
+    def __str__(self):
+        s = ""
+        for i in range(len(self._intv)):
+            s += str(self._intv[i]) + " , " + str(self._poly[i].T) + "\n"
+        return s
+
+def ppolyval(pp,ires):
+    xx = []
+    yy = []
+    for i in range(len(pp.intv)):
+        xxx = linspace(pp.intv[i][0], pp.intv[i][1], ires)
+        yyy = polyvalv(pp.poly[i], xxx)
+        xx.extend(xxx)
+        yy.extend(yyy)
+    return xx,yy
+
+def ppolyaxpy(a,x,y):
+    if len(x.intv) != len(y.intv):
+        raise ValueError, "ppoli incompatible for axpy"
+    z = ppoly(x.intv)
+    for i in range(len(z.intv)):
+        z.poly[i] = polyaxpy(a, x.poly[i], y.poly[i])
+    return z

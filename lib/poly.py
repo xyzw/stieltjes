@@ -1,6 +1,9 @@
 from matrix_utils import *
 from recurrence import r_jacobi
 
+def poly(L):
+    return matrix(L)
+
 # Convert recurrence coefficients to polynomials
 def ab_to_poly(ab):
     n = ab.rows
@@ -20,6 +23,15 @@ def polyvalv(p,xx):
         yy[i] = polyval(p,x)
         i += 1
     return yy
+
+# Polynomial axpy
+def polyaxpy(a,x,y):
+    dx,dy = len(x),len(y)
+    if dx < dy:
+        z = col_join(zeros(1,dy-dx), a*x)+y
+    else:
+        z = a*x+col_join(zeros(1,dx-dy), y)
+    return z
 
 # Discrete convolution
 # From http://www.physics.rutgers.edu/~masud/computing/WPark_recipes_in_python.html

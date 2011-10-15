@@ -6,33 +6,55 @@ from gauss import *
 from sti import *
 from itertools import product
 from poly import *
+from ppoly import *
 from fea1d import *
 import pylab as pl
 from matplotlib.widgets import Slider
 
+x = matrix([1,1,1])
+y = matrix([1,1,1,1])
+print x.T, y.T
+print polyaxpy(-10,x,y).T
 
-n=5
+pp = ppoly([[0,1],[1,2],[2,3]], [poly([1]), poly([2]), poly([3])])
+pq = ppoly([[0,1],[1,2],[2,3]], [poly([1,0]), poly([2,0]), poly([3,0])])
+
+print pp
+print pq
+
+print ppolyaxpy(1,pp,pq)
+
+quit()
+
+mp.dps = 10
+n=4
+p=6
 kappa = 1
 ab = r_jacobi(n,0,0)
-p = ab_to_poly(ab)
 xw = gauss(ab)
 
-els = equidistant(-1,1,3)
-print els
-#fea_diri2(els, 2, kappa, matrix([-1,0,1]), xw)
+X = linspace(-1,1,n+1)
+els,G,x,phi = fea_diri2(X, p, kappa, matrix([-1,0,1]), xw)
 
-print ab_to_poly(ab)
+#print ab_to_poly(ab)
 
-## f = matrix([-1,0,1])
-## ftilde = polyaff(f, -0.5, 0.5, -1, 1)
-## xx = pl.arange(-1.0, 1.0, 0.01)
-## pl.plot(xx,polyvalv(f,xx))
-## pl.plot(xx,polyvalv(ftilde,xx))
-## pl.axis([-1,1,-1,1])
-## pl.grid(True)
-## pl.show()
+f = matrix([-1,0,1])
+#ftilde = polyaff(f, -0.5, 0.5, -1, 1)
+#xx = pl.arange(-1.0, 1.0, 0.01)
 
-#quit()
+#pl.plot(xx,polyvalv(ftilde,xx))
+#for i in range(p+1):
+ #   pl.plot(xx,polyvalv(phi[i,:],xx))
+xx,yy = evalfea1sol(els,G,x,phi,100)
+pl.plot(xx,yy)
+pl.plot(xx,polyvalv(f,xx))
+for l in range(len(X)):
+    pl.plot([X[l],X[l]],[-1000,1000],color='grey',linestyle='--')
+pl.axis([-1,1,-2,2])
+pl.grid(True)
+pl.show()
+
+quit()
 
 ax = pl.subplot(111)
 pl.subplots_adjust(bottom=0.25)
