@@ -1,5 +1,6 @@
 from matrix_utils import *
 from poly import *
+from ppoly import *
 from itertools import product
 
 
@@ -56,10 +57,10 @@ def fea_diri2(X, p, kappa, f, xw):
         loc0[k,l] = quadpq(phi[k,:], phi[l,:], xw)
         loc1[k,l] = quadpq(phid[k,:], phid[l,:], xw)
     
-    print phi
-    print phid
-    print loc0
-    print loc1
+    #print phi
+    #print phid
+    #print loc0
+    #print loc1
 
     nel = len(X)-1
 
@@ -76,7 +77,7 @@ def fea_diri2(X, p, kappa, f, xw):
     
     dof = nel-2 + nel*(p-1)
 
-    print els
+    #print els
     print G
 
     A = zeros(dof+1)
@@ -85,7 +86,7 @@ def fea_diri2(X, p, kappa, f, xw):
     # Assembly
     e = 0
     for el in els:
-        Jaff = mpf(2)/hs[e]
+        Jaff = mpf(2*p)/hs[e]
         loc = Jaff*(kappa*loc0) + (1/Jaff)*loc1
 
         for i in range(p+1):
@@ -94,37 +95,28 @@ def fea_diri2(X, p, kappa, f, xw):
                     A[G[e][i],G[e][j]] += loc[i,j]
                 else:
                     if j == 0:
-                        b[G[e][i]] -= loc0[0,1]*polyval(f, el[0])
+                        b[G[e][i]] -= (mpf(1)/Jaff)*loc0[0,i]*polyval(f, el[0])
                     else:
-                        b[G[e][i]] -= loc0[1,0]*polyval(f, el[1])
+                        b[G[e][i]] -= (mpf(1)/Jaff)*loc0[p,i]*polyval(f, el[1])
 
             if G[e][i] != -1:
                 ft = polyaff(f, -1, 1, el[0], el[1])
                 b[G[e][i]] += Jaff*quadpq(ft,phi[i,:],xw)
-
-        # Dirichlet boundary conditions
-       # if e == 0:
-        #    b[e+1] -= loc0[0,1]*polyval(f, el[0])
-       # if e+1 == len(els):
-        #    b[e+0] -= loc0[1,0]*polyval(f, el[1])
-
         e += 1
 
-    print ">>>> A"
-    print A
-    print ">>>> b"
-    print b
+    #print ">>>> A"
+    #print A
+   # print ">>>> b"
+    #print b
 
     x = lu_solve(A,b)
-
-    #x = col_join(col_join(zeros(1), x),zeros(1))
     
-    print ">>>> x"
-    print x
+   # print ">>>> x"
+   # print x
     
     return els,G,x,phi
 
-# Evaluate finite element solution x
+# Evaluate finite element solution x (DEPRECATED)
 def evalfea1sol(els,G,x,phi,elres):
     xx = []
     yy = []
@@ -133,15 +125,28 @@ def evalfea1sol(els,G,x,phi,elres):
     for el in els:
         xxx = linspace(el[0],el[1],elres)
         yyy = zeros(1,elres)
-        print "===", el[0],el[1]
-        #yyy += polyvalv(polyaff(phi[0,:],el[0],el[1],-1,1),xxx)
         for p in range(phi.rows):
             i = G[e][p]
             if i != -1:
-                print p, i, x[i]
                 yyy += x[i]*polyvalv(polyaff(phi[p,:],el[0],el[1],-1,1),xxx)
 
         xx.extend(xxx)
         yy.extend(yyy)
         e += 1
     return xx,yy
+
+# Convert fea1 solution to ppoly
+def ppolyfea1sol(els,G,x,phi):
+    pp = ppoly(els)
+    e = 0
+    for el in els:
+        q = poly([0])
+        for p in range(phi.rows):
+            i = G[e][p]
+            if i != -1:
+                q = polyaxpy(x[i],polyaff(phi[p,:],el[0],el[1],-1,1),q)
+        pp.poly[e] = q
+        e += 1
+    return pp
+        
+        

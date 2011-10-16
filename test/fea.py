@@ -11,49 +11,53 @@ from fea1d import *
 import pylab as pl
 from matplotlib.widgets import Slider
 
-x = matrix([1,1,1])
-y = matrix([1,1,1,1])
-print x.T, y.T
-print polyaxpy(-10,x,y).T
+# Plot element bars
+def plotels(X):
+    for l in range(len(X)):
+        pl.plot([X[l],X[l]],[-1000,1000],color='grey',linestyle='--')
+        
+# Plot errors
+def ploterr(pp):
+    for p in pp:
+        xx,yy = ppolyval(p,50)
+        pl.plot(xx,yy)
 
-pp = ppoly([[0,1],[1,2],[2,3]], [poly([1]), poly([2]), poly([3])])
-pq = ppoly([[0,1],[1,2],[2,3]], [poly([1,0]), poly([2,0]), poly([3,0])])
+# Plot basis elements
+def plotbasis(phi):
+    xx = linspace(-1,1,100)
+    for i in range(len(phi)):
+        pl.plot(xx,polyvalv(phi[i,:],xx))
 
-print pp
-print pq
 
-print ppolyaxpy(1,pp,pq)
-
-quit()
-
-mp.dps = 10
-n=4
-p=6
-kappa = 1
-ab = r_jacobi(n,0,0)
-xw = gauss(ab)
-
-X = linspace(-1,1,n+1)
-els,G,x,phi = fea_diri2(X, p, kappa, matrix([-1,0,1]), xw)
-
-#print ab_to_poly(ab)
-
-f = matrix([-1,0,1])
-#ftilde = polyaff(f, -0.5, 0.5, -1, 1)
-#xx = pl.arange(-1.0, 1.0, 0.01)
-
-#pl.plot(xx,polyvalv(ftilde,xx))
-#for i in range(p+1):
- #   pl.plot(xx,polyvalv(phi[i,:],xx))
-xx,yy = evalfea1sol(els,G,x,phi,100)
-pl.plot(xx,yy)
-pl.plot(xx,polyvalv(f,xx))
-for l in range(len(X)):
-    pl.plot([X[l],X[l]],[-1000,1000],color='grey',linestyle='--')
-pl.axis([-1,1,-2,2])
 pl.grid(True)
-pl.show()
 
+mp.dps = 20
+
+for p in range(1,8):
+    a=-1
+    b=1
+    n=2
+    f = poly([-1,0,1])
+    kappa = 1
+    ab = r_jacobi(1+p,0,0)
+    xw = gauss(ab)
+    X = linspace(a,b,n+1)
+    els,G,x,phi = fea_diri2(X, p, kappa, f, xw)
+
+    pp = ppolyfea1sol(els,G,x,phi)
+    pf = polytoppoly(f,els,a,b)
+    perr = ppolyaxpy(-1,pp,pf)
+    ploterr([perr])
+    #xx,yy = ppolyval(pp,50)
+    #pl.plot(xx,yy)
+
+
+plotels(X)
+#plotbasis(phi)
+
+pl.axis([-1,1,-0.005,0.005])
+
+pl.show()
 quit()
 
 ax = pl.subplot(111)

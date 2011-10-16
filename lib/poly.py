@@ -2,7 +2,7 @@ from matrix_utils import *
 from recurrence import r_jacobi
 
 def poly(L):
-    return matrix(L)
+    return matrix(L).T
 
 # Convert recurrence coefficients to polynomials
 def ab_to_poly(ab):
@@ -26,11 +26,11 @@ def polyvalv(p,xx):
 
 # Polynomial axpy
 def polyaxpy(a,x,y):
-    dx,dy = len(x),len(y)
+    dx,dy = x.cols,y.cols
     if dx < dy:
-        z = col_join(zeros(1,dy-dx), a*x)+y
+        z = row_join(zeros(1,dy-dx), a*x)+y
     else:
-        z = a*x+col_join(zeros(1,dx-dy), y)
+        z = a*x+row_join(zeros(1,dx-dy), y)
     return z
 
 # Discrete convolution

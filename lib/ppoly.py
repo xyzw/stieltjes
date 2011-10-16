@@ -1,8 +1,10 @@
 
-from poly import polyaxpy
+from matrix_utils import *
+from poly import polyaxpy,polyvalv,polyaff
 
 #TODO: Improve this
 
+# Piecewise polynomial class
 class ppoly(object):
     def __init__(self, I, P=[]):
         self._poly = P if len(P)>0 else [[0] for i in range(len(I))]
@@ -30,6 +32,7 @@ class ppoly(object):
             s += str(self._intv[i]) + " , " + str(self._poly[i].T) + "\n"
         return s
 
+# Evaluate on the supporting intervals with ires resoltion (i.e. for plotting)
 def ppolyval(pp,ires):
     xx = []
     yy = []
@@ -40,6 +43,7 @@ def ppolyval(pp,ires):
         yy.extend(yyy)
     return xx,yy
 
+## ppoly axpy operation
 def ppolyaxpy(a,x,y):
     if len(x.intv) != len(y.intv):
         raise ValueError, "ppoli incompatible for axpy"
@@ -47,3 +51,12 @@ def ppolyaxpy(a,x,y):
     for i in range(len(z.intv)):
         z.poly[i] = polyaxpy(a, x.poly[i], y.poly[i])
     return z
+
+# Given a poly on intervals I, hull(I)=[a,b] convert it to a ppoly
+def polytoppoly(p,I,a,b):
+    pp = ppoly(I)
+    for i in range(len(I)):
+        pp.poly[i] = p
+    return pp
+
+    
