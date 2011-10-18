@@ -1,6 +1,6 @@
 
 from matrix_utils import *
-from poly import polyaxpy,polyvalv,polyaff
+from poly import polyaxpy,polyvalv,polyaff,quadpq,polyl2
 
 #TODO: Improve this
 
@@ -32,6 +32,10 @@ class ppoly(object):
             s += str(self._intv[i]) + " , " + str(self._poly[i].T) + "\n"
         return s
 
+def ppolysamesupp(pp,pq):
+     if len(pp.intv) != len(pq.intv): return False
+     return True
+
 # Evaluate on the supporting intervals with ires resoltion (i.e. for plotting)
 def ppolyval(pp,ires):
     xx = []
@@ -45,8 +49,8 @@ def ppolyval(pp,ires):
 
 ## ppoly axpy operation
 def ppolyaxpy(a,x,y):
-    if len(x.intv) != len(y.intv):
-        raise ValueError, "ppoli incompatible for axpy"
+    if not ppolysamesupp(x,y):
+        raise ValueError, "ppoly incompatible for axpy"
     z = ppoly(x.intv)
     for i in range(len(z.intv)):
         z.poly[i] = polyaxpy(a, x.poly[i], y.poly[i])
@@ -58,5 +62,12 @@ def polytoppoly(p,I,a,b):
     for i in range(len(I)):
         pp.poly[i] = p
     return pp
+
+# Calculate L2 norm squared of the ppoly, the xw quadrature rules are supported on [-1,1]
+def ppolyl2norm(pp, xw):
+    norm2 = 0
+    for i in range(len(pp.intv)):
+        norm2 += polyl2(pp.poly[i], pp.intv[i][0], pp.intv[i][1], xw)
+    return norm2
 
     

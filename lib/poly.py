@@ -12,7 +12,20 @@ def ab_to_poly(ab):
     P[1,:] = row_join(zeros(1,n-2), matrix([mpf(1), -ab[0,0]]).T)
     for k in range(2,n+1):
         P[k-1,:] = row_join(P[k-2,1:n],matrix([mpf(0)])) - P[k-2,:]*ab[k-2,0] - ab[k-2,1]*P[k-3,:]
-        
+    return P
+
+# Convert general recurrence coefficents to polynomials
+def r_to_poly(B):
+    n = B.rows
+    P = zeros(n)
+    P[0,n-1] = mpf(1)
+
+    for k in range(n-1):
+        S = zeros(1,n)
+        for j in range(k+1):
+            S = S + B[j,k]*P[k-j,:]
+        tpik = row_join(P[k,:], zeros(1))
+        P[k+1,:] = tpik[1:n+1] - S
     return P
 
 # Evaluate polynomial on a vector of points (TRACE)
@@ -63,6 +76,12 @@ def polypri(p):
 def quadpq(p, q, xw):
     return fdot(mult(polyvalv(p,xw[:,0]),polyvalv(q,xw[:,0])),xw[:,1])
 
+# Calculate L2 norm squared using quadrature rules xw on the interval [a,b]
+# The quadrature rules are assumed to have support [-1,1]
+def polyl2(p, a, b, xw):
+    paff = polyaff(p,-1,1,a,b)
+    return quadpq(paff,paff,xw)
+
 # Compose polynomial p with the affine transform [a,b]->[c,d]
 def polyaff(p, a, b, c, d):
     aff = matrix([(c-d)/(a-b), (a*d-b*c)/(a-b)])
@@ -81,8 +100,8 @@ def cheby(n):
 
 # Extended Chebyshev nodes on [-1,1]
 def chebyx(n):
-    l = lambda k: cos(pi*mpf(2*k-1)/mpf(2*n)) / cos(pi/mpf(2*n))
-    return matrix([map(l, range(n,0,-1))]) # reversed
+    l = lambda k: cos(pi*mpf(k)/mpf(n))
+    return matrix([map(l, range(0,n+1))])
 
 # Compute Lagrange basis polynomials on nodes X
 def lagrange(X):
@@ -96,8 +115,8 @@ def lagrange(X):
         denom = mpf(1)
         for k in range(n):
             if k != j:
-                Lj = conv(Lj, [mpf(1), X[k]])
-                denom *= X[k]-X[j]
+                Lj = conv(Lj, [mpf(1), -X[k]])
+                denom *= X[j]-X[k]
         L[j,:] = Lj/denom
 
     return L
@@ -116,3 +135,4 @@ def lobatto(n):
         lob[k,:] *= sqrt(mpf(2*k-1)/mpf(2))
     
     return lob
+

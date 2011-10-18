@@ -67,8 +67,6 @@ def dstis1(xw,nd,a0):
     if xw.cols != 4:
         raise ValueError, "Must specify two quadrature rules in parameter xw"
 
-    print xw
-
     n = xw.rows
     md = max(nd)
     B = zeros(n)
