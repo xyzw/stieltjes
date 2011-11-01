@@ -16,11 +16,10 @@ from matrix_utils import *
 # COMMENTS
 # This is a Python port of the OPQ MATLAB routine STIELTJES.
 #
-def dsti(xw):
+def dsti(n,xw):
     if xw.cols != 2:
         raise ValueError, "Not a quadrature rule specified"
     
-    n = xw.rows
     x,w = xw[:,0], xw[:,1]
     ab = zeros(n,2)
     s0 = fsum(w)
@@ -63,13 +62,13 @@ def dsti(xw):
 # This is a Python port of the OPQ MATLAB routine STIELTJES_SOB,
 # with the simplification that s=1. 
 #
-def dstis1(xw,nd,a0):
+def dstis1(n,xw,nd,a0):
     if xw.cols != 4:
         raise ValueError, "Must specify two quadrature rules in parameter xw"
 
-    n = xw.rows
     md = max(nd)
     B = zeros(n)
+    normsq = zeros(n,1)
 
     # Initialization
     p = [zeros(n,md), zeros(n,md)]
@@ -120,9 +119,9 @@ def dstis1(xw,nd,a0):
                             Bden = Bden + xw[mu,s+2]*(p[s][k-j,mu]*p[s][k-j,mu])
 
             B[j-1,k-1] = Bnum/Bden
-            #return B
-                        
-    return B
+            if k == n:
+                normsq[n-j] = Bden     
+    return B,normsq
     
 #
 # PDSTIS1

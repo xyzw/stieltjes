@@ -2,7 +2,7 @@ import sys
 sys.path.append('../lib')
 from recurrence import *
 from decomp import *
-from gauss import *
+from quad import *
 from sti import *
 from itertools import product
 from poly import *
@@ -39,11 +39,11 @@ a=-1
 b=1
 n=5
 
-s = 25
+s = 100
 spike = lambda x : (1-x**2)**s
 spikerhs = lambda x : 2*s*(1-x**2)**(s-1)-s*(s-1)*4*x**2*(1-x**2)**(s-2) + (1-x**2)**s
 
-for p in range(1,3):
+for p in range(1,6):
 
 
     ab = r_jacobi(1+p,0,0)

@@ -1,7 +1,7 @@
 from matrix_utils import *
 from poly import *
 from ppoly import *
-from gauss import *
+from quad import *
 from itertools import product
 
 

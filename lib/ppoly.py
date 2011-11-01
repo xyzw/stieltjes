@@ -4,7 +4,9 @@ from poly import polyaxpy,polyvalv,polyaff,quadpq,polyl2
 
 #TODO: Improve this
 
-# Piecewise polynomial class
+#
+# ppoly - piecewise polynomial class
+#
 class ppoly(object):
     def __init__(self, I, P=[]):
         self._poly = P if len(P)>0 else [[0] for i in range(len(I))]
@@ -70,4 +72,3 @@ def ppolyl2norm(pp, xw):
         norm2 += polyl2(pp.poly[i], pp.intv[i][0], pp.intv[i][1], xw)
     return norm2
 
-    

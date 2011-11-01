@@ -58,6 +58,19 @@ def conv(x, y):
 	z[k] = t
     return z
 
+# Convolution of multiple polynomials (represented as rows of a matrix P) with a fixed one, p.
+def convm(P, p):
+    Q = zeros(P.rows, P.cols+len(p)-1)
+    for i in range(P.rows):
+        Q[i,:] = conv(P[i,:],p)
+    return Q
+
+# Convenience routine for x^n
+def mon(n):
+    p = matrix(1,n+1)
+    p[0] = mpf(1)
+    return p
+
 # Formal polynomial derivative
 def polyder(p):
     N = len(p)
@@ -72,33 +85,71 @@ def polypri(p):
     for i in range(0,N): q[i] /= N-i
     return q
 
-# Evaluate integral of the polynomial pq using quadrature rules xw
+# Evaluate the definite integral of the polynomial pq using quadrature rules xw
 def quadpq(p, q, xw):
     return fdot(mult(polyvalv(p,xw[:,0]),polyvalv(q,xw[:,0])),xw[:,1])
 
+# Evaluate the definite integral of the polynomial pq on an
+# arbitrary interval [a,b] using the quadrature rules xw given on [-1,1]
+def quadapq(p, q, a, b, xw):
+    pqaff,jaff = polyaffj(conv(p,q),mpf(-1),mpf(1),a,b)
+    return jaff*fdot(polyvalv(pqaff,xw[:,0]),xw[:,1])
+    
 # Calculate L2 norm squared using quadrature rules xw on the interval [a,b]
 # The quadrature rules are assumed to have support [-1,1]
 def polyl2(p, a, b, xw):
-    paff = polyaff(p,-1,1,a,b)
+    paff = polyaff(p,mpf(-1),mpf(1),a,b)
     return quadpq(paff,paff,xw)
+
+# Compute composition p(s(x))
+def polycomp(p, s):
+    dp,ds = len(p)-1,len(s)-1 # deg(p),deg(s)
+    dps = dp*ds # deg(p(s(x)))=deg(p)deg(s)
+    q = zeros(1,dps+1) 
+    r = ones(1) 
+    for k in range(0,dp+1):
+        q = q + row_join(zeros(1,dps-k*ds), p[dp-k]*r) # deg(r)=k*deg(s)
+        r = conv(r,s) # r=s^k
+    return q
 
 # Compose polynomial p with the affine transform [a,b]->[c,d]
 def polyaff(p, a, b, c, d):
-    aff = matrix([(c-d)/(a-b), (a*d-b*c)/(a-b)])
-    n = len(p);
-    q = row_join(zeros(1,n-1), matrix([p[n-1]]))
-    r = matrix([mpf(1)])
-    for k in range(n-1,0,-1):
-        r = conv(r,aff)
-        q = q + row_join(zeros(1,k-1), p[k-1]*r);
-    return q
+    return polycomp(p, matrix([(c-d)/(a-b), (a*d-b*c)/(a-b)]))
+
+## def polyaff0(p, a, b, c, d):
+##     aff = matrix([(c-d)/(a-b), (a*d-b*c)/(a-b)])
+##     n = len(p)
+##     q = row_join(zeros(1,n-1), matrix([p[n-1]]))
+##     r = matrix([mpf(1)])
+##     for k in range(n-1,0,-1):
+##         r = conv(r,aff)
+##         q = q + row_join(zeros(1,k-1), p[k-1]*r);
+##     return q
+
+# Same as polyaff but also returns the Jacobian of the transform
+def polyaffj(p, a, b, c, d):
+    return polyaff(p, a, b, c, d), ((c-d)/(a-b))
+
+# L2 norm squared
+def l1norm2(p,xw):
+    return quadpq(p,p,xw)
+
+# H1 inner product k*\int pq+l*\int p'q'
+def h1inner(p,q,xw,k0=mpf(1),k1=mpf(1)):
+    i0 = quadpq(p,q,xw)
+    i1 = quadpq(polyder(p),polyder(q),xw)
+    return k0*i0+k1*i1
+
+# H1 norm squared
+def h1norm2(p,xw,k=mpf(1),l=mpf(1)):
+    return h1inner(p,p,xw,k,l)
 
 # Chebyshev nodes on [-1,1]
 def cheby(n):
     l = lambda k: cos(pi*mpf(2*k-1)/mpf(2*n))
     return matrix([map(l, range(n,0,-1))])
 
-# Extended Chebyshev nodes on [-1,1]
+# Extended Chebyshev nodes of the second kind on [-1,1]
 def chebyx(n):
     l = lambda k: cos(pi*mpf(k)/mpf(n))
     return matrix([map(l, range(0,n+1))])

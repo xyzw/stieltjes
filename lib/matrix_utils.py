@@ -51,6 +51,12 @@ def pwr(A,e):
             C[i,j] = power(A[i,j],e)
     return C
 
+def fabsv(A):
+    B = zeros(A.rows, A.cols)
+    for i in range(A.rows): 
+        for j in range(A.cols):
+            B[i,j] = fabs(A[i,j])
+    return B
 
 def tridiag(a,b,c):
     if a.rows != b.rows+1 or b.rows != c.rows or a.rows != c.rows+1:
