@@ -20,13 +20,18 @@ def equidistant(a,b,n):
 
 # Returns a polynomial RHS lambda expression
 rhspolyxw = None
-def rhspoly(f):
-    ab = r_jacobi(len(f))
-    rhspolyxw = gauss(ab)
-    return lambda phi,el0,el1 : ((el1-el0)/mpf(2)) * quadpq(polyaff(f, -1, 1, el0, el1),phi,rhspolyxw)
+def rhspoly(f,xw):
+    return lambda phi,el0,el1 : ((el1-el0)/mpf(2)) * quadpq(polyaff(f, -1, 1, el0, el1),phi,xw)
 
 def rhsmpmathquad(f):
     return lambda phi,el0,el1 : ((el1-el0)/mpf(2)) * quad(lambda x : f(mpf(0.5)*(el1-el0)*x + mpf(0.5)*(el0+el1))*polyval(phi, x), [-1, 1])
+
+def lagrangecheby(p):
+    Xc = cheby2(p)
+    phi = lagrange(Xc)
+    phi[0,:],phi[p,:] = phi[p,:],phi[0,:]
+    phid = matrix([polyder(phi[i,:].tolist()[0]) for i in range(0,p+1)])
+    return phi, phid
 
 #
 # FEA2D
@@ -47,19 +52,12 @@ def rhsmpmathquad(f):
 # RETURNS
 # Solution written in element bases. 
 #
-def fea_diri2(X, p, kappa, d, rhs, xw):
+def fea_diri2(X, phi, phid, kappa, bt, d, rhs, xw):
     n = len(X)
+    p = len(phi)-1
     els = zip(X[0:n-1], X[1:n])
-
     # store element lengths
     hs = map(lambda el : el[1]-el[0], els)
-
-    # reference element nodes
-    xi = linspace(-1,1,p+1)
-    # compute Lagrange shape functions and derivatives
-    Xc = chebyx(p)
-    phi = lagrange(Xc)
-    phid = matrix([polyder(phi[i,:].tolist()[0]) for i in range(0,p+1)])
 
     # determine local matrices
     loc0 = zeros(p+1)
@@ -83,19 +81,21 @@ def fea_diri2(X, p, kappa, d, rhs, xw):
     i = 0
     io = nel-1
 
-    G.extend([[i] for i in range(io)])
     G.append([-1])
+    G.extend([[i] for i in range(io)])
 
     for k in range(nel):
         G[k].extend(range(io+k*(p-1),io+(k+1)*(p-1)))
 
-    for k in range(0,nel):
-        G[k].append(k-1)
+    for k in range(nel-1):
+        G[k].append(k)
+        
+    G[nel-1].append(-1)
         
     dof = nel-2 + nel*(p-1)
 
     #print els
-    #print G
+    print G
 
     A = zeros(dof+1)
     b = zeros(dof+1,1)
@@ -111,24 +111,35 @@ def fea_diri2(X, p, kappa, d, rhs, xw):
                 if G[e][i] != -1 and G[e][j] != -1:
                     A[G[e][i],G[e][j]] += loc[i,j]
                 else:
-                    if j == 0:
-                        b[G[e][i]] -= (mpf(1)/Jaff)*loc0[0,i]*d[0]
-                    else:
-                        b[G[e][i]] -= (mpf(1)/Jaff)*loc0[p,i]*d[1]
-
+                    if bt == 0: # Dirichlet
+                        if j == 0:
+                            b[G[e][i]] -= loc[0,i]*d[0]
+                        elif j == p:
+                            b[G[e][i]] -= loc[p,i]*d[1]
+                    elif bt == 1: # Neumann
+                        if j == 0:
+                            b[G[e][i]] -= polyval(phi[i,:],X[0])*d[0]
+                        if j == p:
+                            b[G[e][i]] -= polyval(phi[i,:],X[n-1])*d[1]
+                            
             if G[e][i] != -1:
                 b[G[e][i]] += rhs(phi[i,:],el[0],el[1])
         e += 1
 
-    #print ">>>> A"
-    #print A
-    #print ">>>> b"
-    #print b
+    print ">>>> A"
+    print A
+    print ">>>> b"
+    print b
 
     x = lu_solve(A,b)
     
-   # print ">>>> x"
-   # print x
+    if bt == 0:
+        x = col_join(x, matrix(d))
+        G[0][0] = dof+1
+        G[nel-1][p] = dof+2
+    
+    print ">>>> x"
+    print x
     
     return els,G,x,phi
 

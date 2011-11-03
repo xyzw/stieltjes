@@ -38,6 +38,8 @@ kappa2 = mpf(10)
 n = 5
 alpha = 1
 gln = n+2*alpha
+a = mpf(-10)
+b = mpf(10)
 
 mp.dps = 50
 print ">>>> Generating Gauss-Legendre quadrature rules for n =", gln
@@ -62,20 +64,24 @@ for k in range(n):
     h1ni = mpf(1)/sqrt(h1norm2(P[k,:],xwl))
     P[k,:] *= h1ni
 
+for k in range(n):
+    P[k,:] = polyaff(P[k,:],a,b,-1.0,1.0)
+
 G = zeros(n)
 for k in range(n):
     for l in range(n):
-        G[k,l] = h1inner(P[k,:],P[l,:],xwl,kappa2)
+        G[k,l] = h1innerab(P[k,:],P[l,:],a,b,xwl,kappa2)
+        #G[k,l] = h1inner(P[k,:],P[l,:],a,b,xwl,kappa2)
      
 print chop(G)
 
-xx = linspace(-1,1,1000)
+xx = linspace(a,b,1000)
 for k in range(n):
     yy = polyvalv(P[k,:],xx)
     pl.plot(xx,yy,label=r"$k={0:d}$".format(k),linewidth=2.0)
 
 pl.title(r"$\{{C_k\}}$ bubor\'ekpolinomok ($\kappa^2={0:s}$, $n={1:d}$, $\alpha={2:d})$".format(nstr(kappa2),n,alpha))
 pl.legend()
-pl.axis([-1,1,-0.6,0.6])
+pl.axis([float(a),float(b),-0.6,0.6])
 pl.grid(True)
 pl.show()
