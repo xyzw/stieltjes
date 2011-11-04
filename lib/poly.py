@@ -179,7 +179,7 @@ def cheby1(n):
 
 # Extended Chebyshev nodes of the second kind on [-1,1]
 def cheby2(n):
-    l = lambda k: cos(pi*mpf(k)/mpf(n))
+    l = lambda k: cos(pi*mpf(n-k)/mpf(n))
     return matrix([map(l, range(0,n+1))])
 
 # Compute Lagrange basis polynomials on nodes X

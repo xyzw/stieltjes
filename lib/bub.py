@@ -2,6 +2,8 @@ from poly import *
 from chebyshev import *
 from sti import *
 from quad import *
+from fea1d import *
+from ppoly import *
 
 # Bubble weight (1-x^(2*alpha))
 def bw(alpha=1):
@@ -61,3 +63,22 @@ def maxod(G):
             if k != l:
                 maxi = max(maxi, fabs(G[k,l]))
     return maxi
+
+def rhsbubble(C, h, kappa2, xw):
+    f = polyaxpy(mpf(-1), polyder(polyder(C)), kappa2*C) # -C'' + kappa2*C
+    return lambda phi,el0,el1 : ((el1-el0)/mpf(2)) * quadpq(polyaff(f, mpf(-1), mpf(1), el0, el1),phi,xw)
+
+# Returns a set of bubble functions (as ppolys) a-orhtogonal to the finite element basis functions
+def bubble(n,h,kappa2,alpha,p,nel):
+    xwr = gauss(r_jacobi(n+2*alpha+2))
+    xwl = gauss(r_jacobi(n+2*alpha))
+    P = prebub(n,h,kappa2,alpha,xwl)
+
+    X = linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1)
+    Chat = [ppoly() for i in range(n)]
+    for k in range(n):
+        els,G,x,phi = fea1dh(X, lagrangecheby(p), kappa2, 0, [mpf(0),mpf(0)], rhsbubble(P[k,:], h, kappa2, xwl))
+        ppsol = ppolyfea1sol(els,G,x,phi)
+        Chat[k] = ppolyaxpy(mpf(-1),polytoppoly(P[k,:],ppsol.intv),ppsol)
+
+    return Chat

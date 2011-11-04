@@ -46,39 +46,43 @@ pl.grid(True)
 mp.dps = 20
 
 # Generate Bubble polynomials
-kappa2=mpf(100)
-h=mpf(10)
-n=5
+kappa2=mpf(1)
+h=mpf(100)
+n=4
 nel=3
 alpha = 1
-r=500
 p=3
 
-xwl = gauss(r_jacobi(n+2*alpha))
-P = prebub(n,h,kappa2,alpha,xwl)
+## xwl = gauss(r_jacobi(n+2*alpha))
+## P = prebub(n,h,kappa2,alpha,xwl)
 
-xwr = gauss(r_jacobi(n+2*alpha+2))
+## xwr = gauss(r_jacobi(n+2*alpha+2))
 
 X = linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1)
 
-for k in range(n):
-    print k
+## for k in range(n):
+##     print k
 
-    els,G,x,phi = fea_diri2(X, p, kappa2, [mpf(0),mpf(0)], rhsbubble(P[k,:], h, kappa2, xwl), xwr)
-    pp = ppolyfea1sol(els,G,x,phi)
-    #pf = polytoppoly(poly([-1,0,1]),els,a,b)
-    #perr = ppolyaxpy(-1,pp,pf)
-    #ploterr(p,[perr])
-    #print "l2err =", ppolyl2norm(perr,xw)
+##     els,G,x,phi = fea_diri2(X, p, kappa2, [mpf(0),mpf(0)], rhsbubble(P[k,:], h, kappa2, xwl), xwr)
+##     pp = ppolyfea1sol(els,G,x,phi)
+##     #pf = polytoppoly(poly([-1,0,1]),els,a,b)
+##     #perr = ppolyaxpy(-1,pp,pf)
+##     #ploterr(p,[perr])
+##     #print "l2err =", ppolyl2norm(perr,xw)
 
-    Chat = ppolyaxpy(-1,polytoppoly(P[k,:],pp.intv,-mpf(0.5)*h,mpf(0.5)*h),pp)
+##     Chat = ppolyaxpy(-1,polytoppoly(P[k,:],pp.intv,-mpf(0.5)*h,mpf(0.5)*h),pp)
 
-    xx,yy = ppolyval(Chat,50)
+##     xx,yy = ppolyval(Chat,50)
     
-    #pl.plot(xx,polyvalv(P[k,:],xx),label=r"$C_{0:d}$".format(k),linewidth=0.8)
-    pl.plot(xx,yy,label=r"$\widehat{{C}}_{0:d}$".format(k),linewidth=1.2)
+##     #pl.plot(xx,polyvalv(P[k,:],xx),label=r"$C_{0:d}$".format(k),linewidth=0.8)
+##     pl.plot(xx,yy,label=r"$\widehat{{C}}_{0:d}$".format(k),linewidth=1.2)
 
 
+Chat = bubble(n,h,kappa2,alpha,p,nel)
+
+for k in range(n):
+    xx,yy = ppolyval(Chat[k],50)
+    pl.plot(xx,yy,label=r"$C_{0:d}$".format(k),linewidth=0.8)
 
 #rhs = arctanjumprhs(r,kappa2)
 #ad = arctanjump(r)(a)
@@ -99,7 +103,7 @@ for k in range(n):
 
 #pl.title(r"Polynomial spike function $(1-x^2)^s$ ($n=" + str(n) + "$, $s=" + str(s) + "$)")
 
-pl.title(r"$\{{\widehat{{C}}_k\}}$ ($\kappa^2={0:s}$, $n={1:d}$, $\alpha={2:d}$, $p={3:d}$)".format(nstr(kappa2),n,alpha,p))
+pl.title(r"$\{{\widehat{{C}}_k\}}$ on $[{4:s},{5:s}]$ ($\kappa^2={0:s}$, $n={1:d}$, $\alpha={2:d}$, $p={3:d}$)".format(nstr(kappa2),n,alpha,p,nstr(-mpf(0.5)*h),nstr(mpf(0.5)*h)))
 pl.legend()
 plotels(X)
 #print phi
