@@ -40,9 +40,9 @@ def prebub(n,h,kappa2,alpha,xwl):
     P = convm(P, bwaff)
 
     # H1-normalize
-    for k in range(n):
-        h1ni = mpf(1)/sqrt(h1norm2ab(P[k,:],a,b,xwl))
-        P[k,:] *= h1ni
+    #for k in range(n):
+    #    h1ni = mpf(1)/sqrt(h1norm2ab(P[k,:],a,b,xwl))
+    #    P[k,:] *= h1ni
 
     return P
 
@@ -66,7 +66,10 @@ def maxod(G):
 
 def rhsbubble(C, h, kappa2, xw):
     f = polyaxpy(mpf(-1), polyder(polyder(C)), kappa2*C) # -C'' + kappa2*C
-    return lambda phi,el0,el1 : ((el1-el0)/mpf(2)) * quadpq(polyaff(f, mpf(-1), mpf(1), el0, el1),phi,xw)
+    return lambda phi,r0,r1,el0,el1 : ((el1-el0)/(r1-r0)) * quadpq(polyaff(f, r0, r1, el0, el1),phi,xw)
+
+#import pylab as pl
+
 
 # Returns a set of bubble functions (as ppolys) a-orhtogonal to the finite element basis functions
 def bubble(n,h,kappa2,alpha,p,nel):
@@ -80,5 +83,61 @@ def bubble(n,h,kappa2,alpha,p,nel):
         els,G,x,phi = fea1dh(X, lagrangecheby(p), kappa2, 0, [mpf(0),mpf(0)], rhsbubble(P[k,:], h, kappa2, xwl))
         ppsol = ppolyfea1sol(els,G,x,phi)
         Chat[k] = ppolyaxpy(mpf(-1),polytoppoly(P[k,:],ppsol.intv),ppsol)
+        h1ni = mpf(1)/sqrt(ppolyh1norm2(Chat[k],xwl))
+        Chat[k] = ppolyscale(Chat[k],h1ni)
+
+        #xx,yy = polyvalres(P[k,:],-mpf(0.5)*h,mpf(0.5)*h,100)
+        #pl.plot(xx,yy,label=r"$C_{0:d}$".format(k),linewidth=0.8)
+
+        #xx,yy = ppolyvalres(ppsol,100)
+        #pl.plot(xx,yy,label=r"$C^h_{0:d}$".format(k),linewidth=0.8)
+
+    return Chat
+
+def bubbleortho(n,h,kappa2,alpha,p,nel):
+    xwr = gauss(r_jacobi(n+2*alpha+2))
+    xwl = gauss(r_jacobi(n+2*alpha))
+    P = prebub(n,h,kappa2,alpha,xwl)
+
+    X = linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1)
+    Chat = [ppoly() for i in range(n)]
+    
+    for k in range(n):
+        els,G,x,phi = fea1dh(X, lagrangecheby(p), kappa2, 0, [mpf(0),mpf(0)], rhsbubble(P[k,:], h, kappa2, xwl))
+        ppsol = ppolyfea1sol(els,G,x,phi)
+        Chat[k] = ppolyaxpy(mpf(-1),polytoppoly(P[k,:],ppsol.intv),ppsol)
+        h1ni = mpf(1)/sqrt(ppolyh1norm2(Chat[k],xwl))
+        Chat[k] = ppolyscale(Chat[k],h1ni)
+
+    # Execute Gram-Schmidt
+    D = []
+    for k in range(n):
+        Dk = Chat[k]
+        for l in range(k):
+            aCkDl = ppolyh1inner(Chat[k], D[l], xwl, kappa2)
+            aDlDl = ppolyh1inner(D[l], D[l], xwl, kappa2)
+            Dk = ppolyaxpy(-aCkDl/aDlDl, D[l], Dk)
+        D.append(Dk)
+
+    Dinner = zeros(1,n)
+    for k in range(n):
+        Dinner[k] = ppolyh1inner(D[k], D[k], xwl, kappa2)
+
+    return D,Dinner
+    
+
+def bubblexn(n,h,kappa2,alpha,p,nel):
+    xwr = gauss(r_jacobi(n+2*alpha+2))
+    xwl = gauss(r_jacobi(n+2*alpha))
+
+    X = linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1)
+    Chat = [ppoly() for i in range(n)]
+    for k in range(n):
+        C = polyaff(conv(bw(alpha),mon(k)),-mpf(0.5)*h,mpf(0.5)*h,mpf(-1),mpf(1))
+        els,G,x,phi = fea1dh(X, lagrangecheby(p), kappa2, 0, [mpf(0),mpf(0)], rhsbubble(C, h, kappa2, xwl))
+        ppsol = ppolyfea1sol(els,G,x,phi)
+        Chat[k] = ppolyaxpy(mpf(-1),polytoppoly(C,ppsol.intv),ppsol)
+        h1ni = mpf(1)/sqrt(ppolyh1norm2(Chat[k],xwl))
+        Chat[k] = ppolyscale(Chat[k],h1ni)
 
     return Chat

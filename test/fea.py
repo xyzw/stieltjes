@@ -15,11 +15,15 @@ from matplotlib.pyplot import legend
 from egrhs import *
 from aposteriori import *
 
+from matplotlib import rc
+rc('text', usetex=True)
+#rc('font',**{'family':'serif','serif':['Computer Modern Roman'],'size':'18'})
+
 
 # Plot element bars
-def plotels(X,color="grey"):
+def plotels(X,color="grey",width=1):
     for l in range(len(X)):
-        pl.plot([X[l],X[l]],[-1000,1000],color=color,linestyle='--')
+        pl.plot([X[l],X[l]],[-1000,1000],color=color,linestyle='--',linewidth=width)
         
 # Plot errors
 def ploterr(p,pp):
@@ -63,13 +67,23 @@ bt = 0
 if args.case == "spike":
     s = 100
     exact = spike(s)
+    dexact = spikeder(s)
     rhs = spikerhs(s,kappa2)
     ad = 0
     bd = 0
     titl = r"$(1-x^2)^{{{0:s}}}$".format(nstr(s))
+if args.case == "sinc":
+    d = 10
+    exact = lambda x : sin(pi*d*x)/(pi*d*x) if x != 0 else 1.0
+    dexact = lambda x : (pi*d*x*cos(pi*d*x)-sin(pi*d*x))/(pi*d*x**2) if x != 0 else 0
+    rhs = rhsmpmathquad(lambda x : (2*pi*d*x*cos(pi*d*x)-(2-pi**2*d**2*x**2)*sin(pi*d*x))/(pi*d*x**3) + kappa2*sin(pi*d*x)/(pi*d*x))
+    ad = exact(a)
+    bd = exact(b)
+    titl = "sinc"
 elif args.case == "arctan":
-    r = 500
+    r = 100
     exact = arctanjump(r)
+    dexact = arctanjumpder(r)
     rhs = arctanjumprhs(r,kappa2)
     ad = exact(a)
     bd = exact(b)
@@ -91,6 +105,7 @@ elif args.case == "expspike":
 elif args.case == "loggap":
     s = 0.001
     exact = loggap(s)
+    dexact = lambda x : 1.0/(1+x+s)
     rhs = loggaprhs(s,kappa2)
     ad = exact(a)
     bd = exact(b)
@@ -119,6 +134,17 @@ elif args.case == "neuarctanbub":
     ad = arctanbubjumpder(r)(a)
     bd = arctanbubjumpder(r)(b)
     titl = r'$\frac{{2}}{{\pi}}\arctan({0:s}x)(1-x^2)$'.format(nstr(r))
+elif args.case == "homo":
+    ad = 0
+    bd = 1
+    kappa = sqrt(kappa2)
+    c2 = exp(kappa)/(1.0-exp(4.0*kappa))
+    c1 = -c2*exp(2*kappa)
+    exact = lambda x : c1*exp(kappa*x)+c2*exp(-kappa*x)
+    dexact = lambda x: c1*exp(kappa*x)-c2*exp(-kappa*x)
+    rhs = lambda phi,r0,r1,el0,el1 : 0.0
+
+    titl = r'$0$'   
 else:
     print "error: invalid test case specified. specify one of the following."
     print "spike arctan arctanbub expspike loggap neuspike"
@@ -148,29 +174,69 @@ for p in range(pmin,pmax+1):
         pl.plot(xx,yy,linewidth=2,label=r"$u$")
     elif args.mode == "iap":
         print ">>>> Implicit a posteriori error estimation"
-        iapnel = 2
-        iapp = 5
-        
-        errh = fea1diap(els,G,x,iapnel,iapp,phi,kappa2,0,[ad,bd],rhs)
-        
-        xx,yy = ppolyerrvalres(uh,exact,1000)
-        pl.plot(xx,yy,label=r"$e$")
+        iapnel = 3
+        iapp = 3
 
-        errhh1 = ppolyh1norm2(errh, gauss(r_jacobi(iapp+1)))
-        xx,yy = ppolyvalres(errh,1000)
-        pl.plot(xx,yy,label=r"$e_h$, $\|e_h\|_{{H^1}}={0:s}$".format(nstr(errhh1)))
-        
         #xx,yy = ppolyvalres(ppolyder(uh),1000)
         #pl.plot(xx,yy,label=r"$u_h'$")
+
+        duh = ppolyder(uh)
+        dduh = ppolyder(duh)
+
+        #xx,yy = ppolyerrvalres(duh,dexact,1000)
+        #pl.plot(xx,yy,label=r"$e_h'$")
+
+        #xx,yy = ppolyvalres(dduh,1000)
+        #pl.plot(xx,yy,label=r"$u_h''$")
+
+        #res = ppolyaxpy(-kappa2,uh,dduh) # u_h''-kappa2 u_h
+        #xx,yy = ppolyaxpbyvalres(1.0,exact,-1.0,res,100)
+        #pl.plot(xx,yy,label=r"$\widetilde{{f}}$")
+
+        duX = map(dexact, X)       
+        #errh = fea1diap(els,G,x,iapnel,p,iapp,phi,kappa2,0,[ad,bd],duX,rhs)
+        #errhhneu,errhhneunorm = iapneu(els,G,x,phi,kappa2,rhs,duX,iapnel,iapp)
+        #errhhbub,errhhbubnorm,dt = iapbub(els,G,x,phi,kappa2,rhs,iapnel,iapp)
+        #errhhbubxn,errhhbubxnnorm,dt = iapbub(els,G,x,phi,kappa2,rhs,iapnel,iapp,False)
+        errhhbubxnspread,errhhbubxnspreadnorm,tbubxnspread = iapbubspread(els,G,x,phi,kappa2,rhs,iapnel,iapp,False)
+
+        #xx,yy = ppolyerrvalres(uh,exact,1000)
+        #pl.plot(xx,yy,label=r"$e_h$",linewidth=1.5)
+
+        #xx,yy = ppolyvalres(errhhneu,1000)
+        #pl.plot(xx,yy,label=r"$e_{{hh}}^N$",linewidth=2)
+
+        #xx,yy = ppolyvalres(errhhbub,1000)
+        #pl.plot(xx,yy,label=r"$e_{{hh}}^B$",linewidth=2)
+
+        #xx,yy = ppolyvalres(errhhbubxn,1000)
+        #pl.plot(xx,yy,label=r"$e_{{hh}}^{BM}$",linewidth=2)
+
+        #xx,yy = ppolyvalres(errhhbubxnspread,1000)
+        #pl.plot(xx,yy,label=r"$e_{{hh}}^{BMS}$",linewidth=2)
+
+        # Plot norm ratio bars
+        #exactnorm = ppolyerrh1norm2intv(uh,exact,dexact)
+        #errhhneunorms = ppolyh1norm2intv(errhhneu, gauss(r_jacobi(iapp+1)))
+        #for e in range(len(els)):
+        #    w = 0.05*(els[e][1]-els[e][0])
+        #    pl.bar(0.5*(els[e][0]+els[e][1]-2*w), errhhneunorm[e]/exactnorm[e], w)
+        #    pl.bar(0.5*(els[e][0]+els[e][1]+2*w), errhhbubnorm[e]/exactnorm[e], w)
         
+        #uh = ppolyrefuni(uh,iapnel)
+        #errerrh1 = ppolyerrh1norm2(ppolyaxpy(1,uh,errh),exact,dexact)
+        
+        #xx,yy = ppolyerrvalres(ppolyaxpy(1,uh,errh),exact,1000)
+        #pl.plot(xx,yy,label=r"$e_{{hh}}-e_h$, $\|e_{{hh}}-e_h\|_{{H^1}}^2={0:s}$".format(nstr(errerrh1)))
+
         for el in els:
-            plotels(linspace(el[0],el[1],iapnel+1),"green")
+            plotels(linspace(el[0],el[1],iapnel+1),"green",1.0)
 
 
 pl.legend()
 pl.title(titl)
 
-plotels(X,"black")
+plotels(X,"black",2)
 #print phi
 #plotbasis(phi)
 

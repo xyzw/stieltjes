@@ -47,25 +47,14 @@ def testprebub(nv, alphav, hv, kappa2v):
         G = gramh1(P,a,b,kappa2i,xwll)
         err = maxod(G)
         errmax = max(errmax,err)
-        print "{0:>2d} {1:>5d} {2:>8s} {3:>8s} {4:>10s} {5:>6.3f} {5:>6.3f}".format(\
+        print "{0:>2d} & {1:>5d} & {2:>8s} & {3:>8s} & \\verb!{4:>10s}! & {5:>6.3f} & {6:>6.3f} \\\\".format(\
             ni, alphai, nstr(hi), nstr(kappa2i), nstr(err,4), (t2-t1)*1000.0, (t4-t3)*1000.0)
         #print chop(G)
 
     print ">> errmax = {0:s}".format(nstr(errmax))
 
-nv = [2, 5]
-alphav = [1]
-hv = [mpf(2), mpf(10), mpf(0.01), mpf(0.0001), mpf(1000)]
-kappa2v = [mpf(1), mpf(10), mpf(100), mpf(0.0001)]
+nv = [5, 10]
+alphav = [1, 5]
+hv = [mpf(2), mpf(0.0001), mpf(1000)]
+kappa2v = [mpf(1), mpf(100), mpf(1000)]
 testprebub(nv,alphav,hv,kappa2v)
-
-## xx = linspace(a,b,1000)
-## for k in range(n):
-##     yy = polyvalv(P[k,:],xx)
-##     pl.plot(xx,yy,label=r"$k={0:d}$".format(k),linewidth=2.0)
-
-## pl.title(r"$\{{C_k\}}$ bubor\'ekpolinomok ($\kappa^2={0:s}$, $n={1:d}$, $\alpha={2:d})$".format(nstr(kappa2),n,alpha))
-## pl.legend()
-## pl.axis([float(a),float(b),-1,1])
-## pl.grid(True)
-## pl.show()

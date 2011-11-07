@@ -38,9 +38,14 @@ def polyvalv(p,xx):
         i += 1
     return yy
 
+def polyvalres(p,a,b,res):
+    xx = linspace(a,b,res)
+    yy = polyvalv(p,xx)
+    return xx,yy
+
 # Polynomial axpy
 def polyaxpy(a,x,y):
-    dx,dy = x.cols,y.cols
+    dx,dy = len(x),len(y)
     if dx < dy:
         z = row_join(zeros(1,dy-dx), a*x)+y
     else:

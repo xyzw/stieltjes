@@ -10,7 +10,7 @@ import copy
 #
 class ppoly(object):
     def __init__(self, I=[], P=[]):
-        self._poly = P if len(P)>0 else [[0] for i in range(len(I))]
+        self._poly = P if len(P)>0 else [zeros(1) for i in range(len(I))]
         self._intv = copy.copy(I)
 
     @property
@@ -77,6 +77,17 @@ def ppolyaxpy(a,x,y):
         z.poly[i] = polyaxpy(a, x.poly[i], y.poly[i])
     return z
 
+# Refines pp's intvervals into n subintervals uniformly
+def ppolyrefuni(pp,n):
+    rr = ppoly()
+    for i in range(len(pp.intv)):
+        X = linspace(pp.intv[i][0],pp.intv[i][1],n+1)
+        refintv = zip(X[0:n], X[1:n+1])
+        rr.intv.extend(refintv)
+        for intv in refintv:
+            rr.poly.append(pp.poly[i])
+    return rr
+
 # Given a poly on intervals I convert it to a ppoly
 def polytoppoly(p,I):
     pp = ppoly(I)
@@ -98,6 +109,13 @@ def ppolyaff(pp,a,b,c,d):
         qq.poly[i] = polyaff(pp.poly[i],a,b,c,d)
         qq.intv[i] = (alpha*pp.intv[i][0] + beta, alpha*pp.intv[i][1] + beta)
     return qq
+
+def ppolyscale(pp,a):
+    qq = ppoly(pp.intv)
+    for i in range(len(pp.intv)):
+        qq.poly[i] = a*pp.poly[i]
+    return qq
+
 
 def quadppqq(pp,qq,xw):
     s = 0
@@ -122,12 +140,30 @@ def ppolyerrvalres(pp, f, ires):
         yy.extend(yyy)
     return xx,yy
 
+def ppolyaxpbyvalres(a, f, b, pp, ires):
+    xx = []
+    yy = []
+    for i in range(len(pp.intv)):
+        xxx = linspace(pp.intv[i][0], pp.intv[i][1], ires)
+        yyy = a*matrix([[f(x) for x in xxx]]) + b*polyvalv(pp.poly[i], xxx)
+        xx.extend(xxx)
+        yy.extend(yyy)
+    return xx,yy
+
+
 # Compute H1 norm squared of an error
-def ppolyerrh1norm2(pp, f, df, k=mpf(1), l=mpf(1)):
-    s = 0
+def ppolyerrh1norm2intv(pp, f, df, k=mpf(1), l=mpf(1)):
+    s = []
     for i in range(len(pp.intv)):
         integ = lambda x : k*(polyval(pp.poly[i],x) - f(x))**2 + l*(polyval(polyder(pp.poly[i]),x) - df(x) )**2
-        s += quad(integ, pp.intv[i])
+        s.append(quad(integ, pp.intv[i]))
+    return s
+
+# Compute H1 inner product
+def ppolyh1inner(pp,qq,xw,k=mpf(1),l=mpf(1)):
+    s = 0
+    for i in range(len(pp.intv)):
+        s += h1innerab(pp.poly[i], qq.poly[i], pp.intv[i][0], pp.intv[i][1], xw, k, l)
     return s
 
 # Compute H1 norm squared
@@ -136,3 +172,10 @@ def ppolyh1norm2(pp,xw,k=mpf(1),l=mpf(1)):
     for i in range(len(pp.intv)):
         s += h1norm2ab(pp.poly[i], pp.intv[i][0], pp.intv[i][1], xw, k, l)
     return s
+
+def ppolyh1norm2intv(pp,xw,k=mpf(1),l=mpf(1)):
+    norms = []
+    for i in range(len(pp.intv)):
+        norms.append(h1norm2ab(pp.poly[i], pp.intv[i][0], pp.intv[i][1], xw, k, l))
+    return norms
+    
