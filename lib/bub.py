@@ -54,6 +54,14 @@ def gramh1(P,a,b,kappa2,xwl):
             G[k,l] = h1innerab(P[k,:],P[l,:],a,b,xwl,kappa2)
     return G
 
+def ppolygramh1(pp,kappa2,xwl):
+    n = len(pp)
+    G = zeros(n)
+    for k in range(n):
+        for l in range(n):
+            G[k,l] = ppolyh1inner(pp[k],pp[l],xwl,kappa2)
+    return G
+
 # Compute the absolute maximum of off-diagonal elements
 def maxod(G):
     n = G.rows
@@ -141,3 +149,33 @@ def bubblexn(n,h,kappa2,alpha,p,nel):
         Chat[k] = ppolyscale(Chat[k],h1ni)
 
     return Chat
+
+def bubblexnortho(n,h,kappa2,alpha,p,nel):
+    xwr = gauss(r_jacobi(n+2*alpha+2))
+    xwl = gauss(r_jacobi(n+2*alpha))
+
+    X = linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1)
+    Chat = [ppoly() for i in range(n)]
+    for k in range(n):
+        C = polyaff(conv(bw(alpha),mon(k)),-mpf(0.5)*h,mpf(0.5)*h,mpf(-1),mpf(1))
+        els,G,x,phi = fea1dh(X, lagrangecheby(p), kappa2, 0, [mpf(0),mpf(0)], rhsbubble(C, h, kappa2, xwl))
+        ppsol = ppolyfea1sol(els,G,x,phi)
+        Chat[k] = ppolyaxpy(mpf(-1),polytoppoly(C,ppsol.intv),ppsol)
+        h1ni = mpf(1)/sqrt(ppolyh1norm2(Chat[k],xwl))
+        Chat[k] = ppolyscale(Chat[k],h1ni)
+
+    # Execute Gram-Schmidt
+    D = []
+    for k in range(n):
+        Dk = Chat[k]
+        for l in range(k):
+            aCkDl = ppolyh1inner(Chat[k], D[l], xwl, kappa2)
+            aDlDl = ppolyh1inner(D[l], D[l], xwl, kappa2)
+            Dk = ppolyaxpy(-aCkDl/aDlDl, D[l], Dk)
+        D.append(Dk)
+
+    Dinner = zeros(1,n)
+    for k in range(n):
+        Dinner[k] = ppolyh1inner(D[k], D[k], xwl, kappa2)
+
+    return D,Dinner

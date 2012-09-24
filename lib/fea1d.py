@@ -59,7 +59,7 @@ def fea1dh(X, phi, kappa2, bt, d, rhs):
         loc0[k,l] = quadpq(phi[k,:], phi[l,:], xw)
         loc1[k,l] = quadpq(phid[k,:], phid[l,:], xw)
 
-    print d
+    #print d
     #print ">>>> phi"
     #print phi
     #print phid
@@ -127,8 +127,8 @@ def fea1dh(X, phi, kappa2, bt, d, rhs):
                 
         e += 1
 
-    print ">>>> A"
-    print chop(A)
+    #print ">>>> A"
+    #print chop(A)
     #print ">>>> b"
     #print b
 
@@ -149,7 +149,7 @@ def ppolyfea1sol(els,G,x,phi):
     pp = ppoly(els)
     e = 0
     for el in els:
-        q = poly([0])
+        q = zeros(1)
         for p in range(phi.rows):
             i = G[e][p]
             if i != -1:

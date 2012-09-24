@@ -127,14 +127,13 @@ def iapbub(els,G,x,phi,kappa2,rhs,iapnel,iapp,sobolev=True):
                   
     return eh,h1norm2,time.time()-t1
 
-def iapbubortho(els,G,x,phi,kappa2,rhs,iapnel,iapp):
+def iapbuba(els,G,x,phi,kappa2,rhs,iapp):
     nel = len(els)
     uh = ppolyfea1sol(els,G,x,phi)
     duh = ppolyder(uh)
     res = ppolyaxpy(-kappa2,uh,ppolyder(duh)) # u_h''-kappa2 u_h
     p = phi.cols
 
-    #print ">>>> iapbub on", els
 
     # Precompute bubble functions
     mp.dps = 30
@@ -142,15 +141,83 @@ def iapbubortho(els,G,x,phi,kappa2,rhs,iapnel,iapp):
 
     h = (els[0][1]-els[0][0]) # ASSUME UNIFORM ELEMENTS
     nbub = iapp
-    
-    bub,bubinner = bubbleortho(nbub,h,kappa2,alpha,p,iapnel)
+
+
+    xwl = gauss(r_jacobi(nbub+2*alpha))
+    P = prebub(nbub,h,kappa2,alpha,xwl)
+    bub = []
+    for i in range(P.rows):
+        bub.append(polytoppoly(P[i,:], [(-0.5*h, 0.5*h)]))
         
     degbub = len(bub[0].poly[0])
-
     # for the quadrature of the residual
     xwl = gauss(r_jacobi(max(degbub,p)))
 
     #nprint(loc)
+
+    mp.dps = 15
+
+    h1norm2 = []
+    eh = ppoly()
+
+    t1 = time.time()
+
+    k = 0
+    for el in els:
+        # Translate bubbles to the element
+        tbub = []
+        for b in bub:
+            bt = ppolytrans(b, 0.5*(el[0]+el[1]))
+            tbub.append(bt)
+
+        # Execute bubble kernel
+        erhs = lambda phii, el0, el1 : rhs(phii, el0, el1, el0, el1) +\
+               0.5*(el1-el0) * quadpqab(phii,res.poly[k],el0,el1, xwl)
+        
+        G,x = iapbubaker(tbub, erhs)
+        eeh = ppolyiapbubsol(G,x,tbub)
+        h1norm2.append(ppolyh1norm2(eeh,xwl))
+        ppolyext(eh, eeh)
+
+        k += 1
+                  
+    return eh,h1norm2,time.time()-t1
+
+def iapbubaker(bub, rhs):    
+    nbub = len(bub)
+    G = [range(nbub)]       
+    x = zeros(nbub,1)
+
+    # Solve
+    for i in range(nbub):
+        bi = 0
+        for k in range(len(bub[i].intv)):
+            bi += rhs(bub[i].poly[k], bub[i].intv[k][0], bub[i].intv[k][1])
+        x[i] = bi
+
+    return G,x
+
+def iapbubortho(els,G,x,phi,kappa2,rhs,iapnel,iapp):
+    nel = len(els)
+    uh = ppolyfea1sol(els,G,x,phi)
+    duh = ppolyder(uh)
+    res = ppolyaxpy(-kappa2,uh,ppolyder(duh)) # u_h''-kappa2 u_h
+    p = phi.cols
+
+
+    # Precompute bubble functions
+    mp.dps = 30
+    alpha = p/2+1
+
+    h = (els[0][1]-els[0][0]) # ASSUME UNIFORM ELEMENTS
+    nbub = iapp
+
+    bub,bubinner = bubbleortho(nbub,h,kappa2,alpha,p,iapnel)
+  
+    degbub = len(bub[0].poly[0])
+    
+    # for the quadrature of the residual
+    xwl = gauss(r_jacobi(max(degbub,p)))
 
     mp.dps = 15
 
@@ -181,6 +248,71 @@ def iapbubortho(els,G,x,phi,kappa2,rhs,iapnel,iapp):
     return eh,h1norm2,time.time()-t1
 
 def iapbuborthoker(bub, bubinner, rhs):    
+    nbub = len(bub)
+    G = [range(nbub)]       
+    x = zeros(nbub,1)
+
+    # Solve
+    for i in range(nbub):
+        bi = 0
+        for k in range(len(bub[i].intv)):
+            bi += rhs(bub[i].poly[k], bub[i].intv[k][0], bub[i].intv[k][1])
+        x[i] = bi/bubinner[i]
+
+    return G,x
+
+
+def iapbubxnortho(els,G,x,phi,kappa2,rhs,iapnel,iapp):
+    nel = len(els)
+    uh = ppolyfea1sol(els,G,x,phi)
+    duh = ppolyder(uh)
+    res = ppolyaxpy(-kappa2,uh,ppolyder(duh)) # u_h''-kappa2 u_h
+    p = phi.cols
+
+
+    # Precompute bubble functions
+    mp.dps = 30
+    alpha = p/2+1
+
+    h = (els[0][1]-els[0][0]) # ASSUME UNIFORM ELEMENTS
+    nbub = iapp
+
+    bub,bubinner = bubblexnortho(nbub,h,kappa2,alpha,p,iapnel)
+  
+    degbub = len(bub[0].poly[0])
+    
+    # for the quadrature of the residual
+    xwl = gauss(r_jacobi(max(degbub,p)))
+
+    mp.dps = 15
+
+    h1norm2 = []
+    eh = ppoly()
+
+    t1 = time.time()
+
+    k = 0
+    for el in els:
+        # Translate bubbles to the element
+        tbub = []
+        for b in bub:
+            bt = ppolytrans(b, 0.5*(el[0]+el[1]))
+            tbub.append(bt)
+
+        # Execute bubble kernel
+        erhs = lambda phii, el0, el1 : rhs(phii, el0, el1, el0, el1) +\
+               0.5*(el1-el0) * quadpqab(phii,res.poly[k],el0,el1, xwl)
+        
+        G,x = iapbuborthoker(tbub, bubinner, erhs)
+        eeh = ppolyiapbubsol(G,x,tbub)
+        h1norm2.append(ppolyh1norm2(eeh,xwl))
+        ppolyext(eh, eeh)
+
+        k += 1
+                  
+    return eh,h1norm2,time.time()-t1
+
+def iapbubxnorthoker(bub, bubinner, rhs):    
     nbub = len(bub)
     G = [range(nbub)]       
     x = zeros(nbub,1)

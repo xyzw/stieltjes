@@ -48,20 +48,20 @@ rhs = arctanjumprhs(s,kappa2)
 ad = exact(a)
 bd = exact(b)
 
-#d = 5
+#d = 10
 #exact = lambda x : sin(pi*d*x)/(pi*d*x) if x != 0 else 1.0
 #dexact = lambda x : (pi*d*x*cos(pi*d*x)-sin(pi*d*x))/(pi*d*x**2) if x != 0 else 0
 #rhs = rhsmpmathquad(lambda x : (2*pi*d*x*cos(pi*d*x)-(2-pi**2*d**2*x**2)*sin(pi*d*x))/(pi*d*x**3) + kappa2*sin(pi*d*x)/(pi*d*x) if x != 0 else kappa2)
 #ad = exact(a)
 #bd = exact(b)
 
-print "{0:>6s} & {1:>6s} & {2:>6s} & {3:>6s} & {4:>25s} & {5:>25s} & {6:>25s} & {7:>10s} & {8:>10s}\\\\".format(\
-    "nel","p","iapnel","iapp","rhoneufa","rhobub","rhosbub","dtneufa","dtdbub")
+print "{0:>6s} & {1:>6s} & {2:>6s} & {3:>6s} & {4:>25s} & {5:>25s} & {6:>25s} & {7:>25s} & {8:>10s} & {9:>10s} \\\\".format(\
+    "nel","p","iapnel","iapp","rhoneufa","rhobub","rhobuba","rhoxnbub","dtneufa","dtbub")
 
-for neli in range(10,30):
-    for pi in range(2,3):
+for neli in range(10,20):
+    for pi in range(1,2):
         for iapneli in range(3,4):
-            for iappi in range(4,5):
+            for iappi in range(3,4):
 
                 X = linspace(a,b,neli+1)
 
@@ -76,8 +76,6 @@ for neli in range(10,30):
                 #print ">>>> Implicit a posteriori error estimation"
                 duh = ppolyder(uh)
                 dduh = ppolyder(duh)
-
-                duX = map(dexact, X)
 
                 #print ">>>>>> Neumann problem with exact derivatives"
                 #t1 = time.time()
@@ -94,18 +92,20 @@ for neli in range(10,30):
 
 #                errhhbubxn,errhhbubxnnorm,tbubxn = iapbub(els,G,x,phi,kappa2,rhs,iapneli,iappi,False)
 
-                errhhbubxnspread,errhhbubxnspreadnorm,tbubxnspread = iapbubspread(els,G,x,phi,kappa2,rhs,iapneli,iappi,False)
+#                errhhbubxnspread,errhhbubxnspreadnorm,tbubxnspread = iapbubspread(els,G,x,phi,kappa2,rhs,iapneli,iappi,False)
 
-                errhhbubortho,errhhbuborthonorm,tbubortho= iapbubortho(els,G,x,phi,kappa2,rhs,iapneli,iappi)
-
-                
+                errhhbubortho,errhhbuborthonorm,tbubortho = iapbubortho(els,G,x,phi,kappa2,rhs,iapneli,iappi)
+                errhhbuba,errhhbubanorm,tbuba = iapbuba(els,G,x,phi,kappa2,rhs,iappi)
+                errhhbubxnortho,errhhbubxnorthonorm,tbubxnortho = iapbubxnortho(els,G,x,phi,kappa2,rhs,iapneli,iappi)
+                                
                 errhnorm = ppolyerrh1norm2intv(uh,exact,dexact)
 
                 #for e in range(len(els)):
                 #    print "{0:>2d} {1:>15s} {2:>15s} {3:>15s} {4:>15s}".format(e, nstr(errhhneunorm[e]), nstr(errhhneunorm[e]), nstr(errhhneufanorm[e]), nstr(errhhbubnorm[e]))
 
-                print "{0:>6d} & {1:>6d} & {2:>6d} & {3:>6d} & {4:>25s} & {5:>25s} & {6:>25s} & {7:>10f} & {8:>10f} \\\\".\
-                      format(neli,pi,iapneli,iappi, pearson(errhhneufanorm,errhnorm), pearson(errhhbuborthonorm,errhnorm),pearson(errhhbubxnspreadnorm,errhnorm), t4-t3, tbubortho)
+                print "{0:>6d} & {1:>6d} & {2:>6d} & {3:>6d} & {4:>25s} & {5:>25s} & {6:>25s} & {7:>25s} & {8:>10f} & {9:>10f} \\\\".\
+                      format(neli,pi,iapneli,iappi, pearson(errhhneufanorm,errhnorm), pearson(errhhbuborthonorm,errhnorm),pearson(errhhbubanorm,errhnorm), pearson(errhhbubxnorthonorm,errhnorm),\
+                             t4-t3, tbubortho)
 
                 ## print "{0:>6d} & {1:>6d} & {2:>6d} & {3:>6d} & {4:>25s} & {5:>25s} & {6:>25s} & {7:>25s} & {8:>25s} & {9:>10f} & {10:>10f} & {11:>10f} & {12:>10f} & {13:>10f}\\\\".\
                 ##       format(neli,pi,iapneli,iappi,\

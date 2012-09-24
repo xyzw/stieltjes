@@ -50,11 +50,17 @@ def arctanbubjumprhs(r,kappa2):
 def expspike(a):
     return lambda x : exp(-x**2/a**2)
 
+def expspikeder(a):
+    return lambda x : exp(-x**2/a**2)*(-2*x/a**2)
+
 def expspikerhs(a,kappa2):
     return rhsmpmathquad(lambda x : (2.0/a**4)*exp(-x**2/a**2)*(a**2-2*x**2) + kappa2*exp(-x**2/a**2))
 
 def loggap(s):
     return lambda x : log(1+x+s)
+
+def loggapder(s):
+    return lambda x : 1.0/(1.0+x+s)
 
 def loggaprhs(s,kappa2):
     return rhsmpmathquad(lambda x : 1.0/(1+x+s)**2 + kappa2*log(1+x+s))

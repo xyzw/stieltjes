@@ -44,34 +44,24 @@ p = args.p
 nel = args.nel
 
 
-bub = bubble(n,h,kappa2,alpha,p,nel)
-#for i in range(len(Chat)):
-#    Chat[i] = ppolyaff(Chat[i], -h, h, 0, 2*h)
+#bub = bubble(n,h,kappa2,alpha,p,nel)
+bub0,bubi = bubblexnortho(n,h,kappa2,alpha,p,nel)
+bub1,bubi = bubbleortho(n,h,kappa2,alpha,p,nel)
 
-x0 = 10
-x1 = x0+h
-
-bubdeg = len(bub[0].poly[0])
-psi = zeros(n*nel,bubdeg)
-
-#for i in range(nel):
-#    for l in range(n):
-#        hs = bub[l].intv[i][1] - bub[l].intv[i][0]
-#        psi[i*n+l,:] = polyaff(bub[l].poly[i],x0,x0+hs,bub[l].intv[i][0],bub[l].intv[i][1])
 
 for k in range(n):
-#    for l in range(n):
-        #xx,yy = polyvalres(psi[i*n+l,:],x0,x1,1000)
-        #pl.plot(xx,yy)
-    xx,yy = ppolyvalres(bub[k],50)
-    pl.plot(xx,yy,label=r"$C_{0:d}$".format(k),linewidth=0.8)
+    xx,yy = ppolyvalres(bub0[k],100)
+    pl.plot(xx,yy,label=r"$B_{0:d}$".format(k),linewidth=1.5)
+    
+    xx,yy = ppolyvalres(bub1[k],100)
+    pl.plot(xx,yy,label=r"$D_{0:d}$".format(k),linewidth=1.0)
 
 pl.title(r"$\{{\widehat{{C}}_k\}}$ on $[{4:s},{5:s}]$ ($\kappa^2={0:s}$, $n={1:d}$, $\alpha={2:d}$, $p={3:d}$)".format(nstr(kappa2),n,alpha,p,nstr(-mpf(0.5)*h),nstr(mpf(0.5)*h)))
 pl.legend()
 
 plotels(linspace(-mpf(0.5)*h,mpf(0.5)*h,nel+1))
 
-pl.axis([float(x0),float(x1),-0.2,0.2])
+pl.axis([float(-mpf(0.5)*h),float(mpf(0.5)*h),-0.2,0.2])
 pl.grid(True)
 
 pl.show()
